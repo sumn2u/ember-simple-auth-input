@@ -72,24 +72,24 @@ export default Base.extend({
   _refreshTokenTimeout: null,
 
   /**
-    Format user input and return desired output 
+    Format user input and return desired output
         of the form { grant_type: <grant_type>, username: <username>, password: <password> };
 
     @property authenticationInputFormat
     @type Function
     @default null
-   */
+  */
   authenticationInputFormat: null,
 
   /**
-    Format user input and return desired output 
+    Format user input and return desired output
         of the form { access_token(*): <>, expires_in(*): <>, refresh_token(*): <>, scope: <>, status: <>, extra: <> }
         attributes with (*) in front are required
 
     @property authenticationResponseFormat
     @type Function
     @default null
-   */
+  */
   authenticationResponseFormat: null,
 
   /**
