@@ -72,13 +72,42 @@ export default Base.extend({
   _refreshTokenTimeout: null,
 
   /**
+    Format user input and return desired output 
+        of the form { grant_type: <grant_type>, username: <username>, password: <password> };
+
+    @property authenticationInputFormat
+    @type Function
+    @default null
+   */
+  authenticationInputFormat: null,
+
+  /**
+    Format user input and return desired output 
+        of the form { access_token(*): <>, expires_in(*): <>, refresh_token(*): <>, scope: <>, status: <>, extra: <> }
+        attributes with (*) in front are required
+
+    @property authenticationResponseFormat
+    @type Function
+    @default null
+   */
+  authenticationResponseFormat: null,
+
+  /**
     @method init
     @private
   */
   init: function() {
-    this.serverTokenEndpoint           = Configuration.serverTokenEndpoint;
+    this.serverTokenEndpoint = Configuration.serverTokenEndpoint;
     this.serverTokenRevocationEndpoint = Configuration.serverTokenRevocationEndpoint;
-    this.refreshAccessTokens           = Configuration.refreshAccessTokens;
+    this.refreshAccessTokens = Configuration.refreshAccessTokens;
+
+    // this is a function that allows user to  use custom input and
+    // returns the expected data  { grant_type: 'password', username: options.identification, password: options.password };
+    this.authenticationInputFormat = Configuration.authenticationInputFormat;
+
+    // this will have to return { access_token(*): <>, expires_in(*): <>, refresh_token(*): <>, scope: <>, status: <>, extra: <> }
+    // * means required
+    this.authenticationResponseFormat = Configuration.authenticationResponseFormat;
   },
 
   /**
@@ -146,16 +175,40 @@ export default Base.extend({
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var data = { grant_type: 'password', username: options.identification, password: options.password };
+
+      //==========
+      var inputFormatFunction = _this.authenticationInputFormat;
+      // instead of this, use a parsing function
+      console.log("inputFormatFunction", inputFormatFunction, typeof inputFormatFunction);
+      if (!!inputFormatFunction && typeof inputFormatFunction === "function") {
+        data = inputFormatFunction(options);
+      }
+      //==========
+
+      //scope attribute is optional according to https://tools.ietf.org/html/rfc6749#section-4.1.1
       if (!Ember.isEmpty(options.scope)) {
         var scopesString = Ember.makeArray(options.scope).join(' ');
-        Ember.merge(data, { scope: scopesString });
+        Ember.merge(data, {
+          scope: scopesString
+        });
       }
-      _this.makeRequest(_this.serverTokenEndpoint, data).then(function(response) {
+      _this.makeRequest(_this.serverTokenEndpoint, data).then(function(resolveData) {
         Ember.run(function() {
+
+          //================
+          var response = resolveData;
+          // instead of this, use a parsing function
+          var outputFormatFunction = _this.authenticationResponseFormat;
+          if (!!outputFormatFunction && typeof outputFormatFunction === "function") {
+            response = outputFormatFunction(resolveData);
+          } //================
+
           var expiresAt = _this.absolutizeExpirationTime(response.expires_in);
           _this.scheduleAccessTokenRefresh(response.expires_in, expiresAt, response.refresh_token);
           if (!Ember.isEmpty(expiresAt)) {
-            response = Ember.merge(response, { expires_at: expiresAt });
+            response = Ember.merge(response, {
+              expires_at: expiresAt
+            });
           }
           resolve(response);
         });
@@ -177,6 +230,7 @@ export default Base.extend({
   */
   invalidate: function(data) {
     var _this = this;
+
     function success(resolve) {
       Ember.run.cancel(_this._refreshTokenTimeout);
       delete _this._refreshTokenTimeout;
@@ -191,7 +245,8 @@ export default Base.extend({
           var token = data[tokenType];
           if (!Ember.isEmpty(token)) {
             requests.push(_this.makeRequest(_this.serverTokenRevocationEndpoint, {
-              token_type_hint: tokenType, token: token
+              token_type_hint: tokenType,
+              token: token
             }));
           }
         });
@@ -219,10 +274,10 @@ export default Base.extend({
   */
   makeRequest: function(url, data) {
     return Ember.$.ajax({
-      url:         url,
-      type:        'POST',
-      data:        data,
-      dataType:    'json',
+      url: url,
+      type: 'POST',
+      data: data,
+      dataType: 'json',
       contentType: 'application/x-www-form-urlencoded'
     });
   },
@@ -255,16 +310,18 @@ export default Base.extend({
   */
   refreshAccessToken: function(expiresIn, refreshToken) {
     var _this = this;
-    var data  = { grant_type: 'refresh_token', refresh_token: refreshToken };
+    var data = {
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken
+    };
     return new Ember.RSVP.Promise(function(resolve, reject) {
       _this.makeRequest(_this.serverTokenEndpoint, data).then(function(response) {
         Ember.run(function() {
-          expiresIn     = response.expires_in || expiresIn;
-          refreshToken  = response.refresh_token || refreshToken;
+          expiresIn = response.expires_in || expiresIn;
+          refreshToken = response.refresh_token || refreshToken;
           var expiresAt = _this.absolutizeExpirationTime(expiresIn);
-          var data      = Ember.merge(response, { expires_in: expiresIn, expires_at: expiresAt, refresh_token: refreshToken });
           _this.scheduleAccessTokenRefresh(expiresIn, null, refreshToken);
-          _this.trigger('sessionDataUpdated', data);
+          _this.trigger('sessionDataUpdated', Ember.merge(data, response));
           resolve(data);
         });
       }, function(xhr, status, error) {
