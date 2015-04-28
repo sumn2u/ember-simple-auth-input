@@ -320,9 +320,10 @@ export default Base.extend({
           expiresIn = response.expires_in || expiresIn;
           refreshToken = response.refresh_token || refreshToken;
           var expiresAt = _this.absolutizeExpirationTime(expiresIn);
+          var newAuthenticationData      = Ember.merge(response, { expires_in: expiresIn, expires_at: expiresAt, refresh_token: refreshToken });
           _this.scheduleAccessTokenRefresh(expiresIn, null, refreshToken);
-          _this.trigger('sessionDataUpdated', Ember.merge(data, response));
-          resolve(data);
+          _this.trigger('sessionDataUpdated', newAuthenticationData);
+          resolve(newAuthenticationData);
         });
       }, function(xhr, status, error) {
         Ember.Logger.warn('Access token could not be refreshed - server responded with ' + error + '.');
