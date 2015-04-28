@@ -101,7 +101,7 @@
         },
         authenticationResponseFormat: function(options){
 
-          var data = Ember.$.extend(options, {
+          var data = Ember.merge(options, {
             expires_in: options.expires_in,
             expires_at: options.expires_at,
             refresh_token: options.refresh_token
