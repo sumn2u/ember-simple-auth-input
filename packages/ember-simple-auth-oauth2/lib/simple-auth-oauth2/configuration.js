@@ -3,7 +3,9 @@ import loadConfig from 'simple-auth/utils/load-config';
 var defaults = {
   serverTokenEndpoint:           '/token',
   serverTokenRevocationEndpoint: null,
-  refreshAccessTokens:           true
+  refreshAccessTokens:           true,
+  authenticationInputFormat: null,
+  authenticationResponseFormat: null
 };
 
 /**
@@ -57,6 +59,9 @@ export default {
     @default true
   */
   refreshAccessTokens: defaults.refreshAccessTokens,
+
+  authenticationInputFormat: defaults.authenticationInputFormat,
+  authenticationResponseFormat: defaults.authenticationResponseFormat,
 
   /**
     @method load
