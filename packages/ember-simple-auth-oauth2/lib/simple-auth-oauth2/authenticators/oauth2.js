@@ -178,11 +178,11 @@ export default Base.extend({
 
 
             //==========
-            var inputFormatFunction = _this.authenticationInputFormat;
+            var inputFormatObject = _this.authenticationInputFormat;
             // instead of this, use a parsing function
-            console.log("inputFormatFunction", inputFormatFunction, Ember.typeOf(inputFormatFunction), options);
-            if (!Ember.isEmpty(inputFormatFunction) && Ember.typeOf(inputFormatFunction) === "object") {
-              var formAttributes = inputFormatFunction.formAttributes;
+            console.log("inputFormatObject", inputFormatObject, Ember.typeOf(inputFormatObject), options);
+            if (!Ember.isEmpty(inputFormatObject) && Ember.typeOf(inputFormatObject) === "object") {
+              var formAttributes = inputFormatObject.formAttributes;
 
               console.log("formAttributes", formAttributes, !Ember.isEmpty(formAttributes), Ember.typeOf(formAttributes));
 
@@ -197,7 +197,7 @@ export default Base.extend({
                 });
               }
 
-            var headers = inputFormatFunction.headers;
+            var headers = inputFormatObject.headers;
 
             console.log("headers", headers, !Ember.isEmpty(headers), Ember.typeOf(headers));
 
@@ -209,7 +209,6 @@ export default Base.extend({
                   headerData[attribute] = options[attribute];
                 }
               });
-
 
               Ember.$.ajaxSetup({
                 headers: headerData
@@ -234,16 +233,16 @@ export default Base.extend({
                 //================
                 var response = resolveData;
                 // instead of this, use a parsing function
-                var outputFormatFunction = _this.authenticationResponseFormat;
-                if (!Ember.isEmpty(outputFormatFunction) && Ember.typeOf(outputFormatFunction) === "object") {
+                var outputFormatObject = _this.authenticationResponseFormat;
+                if (!Ember.isEmpty(outputFormatObject) && Ember.typeOf(outputFormatObject) === "object") {
 
-                  Object.keys(outputFormatFunction).forEach(function(key) {
+                  Object.keys(outputFormatObject).forEach(function(key) {
 
-                    if (Ember.isEmpty(outputFormatFunction[key])) {
+                    if (Ember.isEmpty(outputFormatObject[key])) {
                       return;
                     }
 
-                    var attrBreak = outputFormatFunction[key].split(".");
+                    var attrBreak = outputFormatObject[key].split(".");
                     var server_value = null;
                     attrBreak.forEach(function(attr, index) {
                       if (index <= 0) {
