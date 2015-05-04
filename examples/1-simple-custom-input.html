@@ -44,17 +44,13 @@
 
     <script type="text/x-handlebars" data-template-name="index">
       <div class="page-header">
-        <h1>Example with token refresh</h1>
+        <h1>Simple example</h1>
       </div>
-      {{#if session.isAuthenticated}}
-      <div class="alert alert-info">
-        The token is automatically refreshed every 5 to 10 seconds, it currently is: <code>{{ session.secure.access_token }}</code>.
-      </div>
-      {{else}}
+      {{#unless session.isAuthenticated}}
         <div class="alert alert-info">
           You can {{#link-to 'login' classNames='alert-link'}}log in{{/link-to}} with login <code>letme</code> and password <code>in</code>.
         </div>
-      {{/if}}
+      {{/unless}}
     </script>
 
     <script type="text/x-handlebars" data-template-name="login">
@@ -73,11 +69,6 @@
         </div>
         <button type="submit" class="btn btn-default">Login</button>
       </form>
-      {{#if errorMessage}}
-        <div class="alert alert-danger">
-          <strong>Login failed:</strong> {{errorMessage}}
-        </div>
-      {{/if}}
     </script>
 
     <script type="text/x-handlebars" data-template-name="protected">
@@ -90,17 +81,24 @@
     </script>
 
     <script type="text/javascript">
-      // configure the endpoint for the OAuth 2.0 authenticator and enable token revokation
+      // enable token revokation
       window.ENV = window.ENV || {};
       window.ENV['simple-auth-oauth2'] = {
-        serverTokenEndpoint: '/v2/token',
-        serverTokenRevocationEndpoint: '/revoke'
+        serverTokenRevocationEndpoint: '/revoke',
+        authenticationInputFormat: { //data format expected by the authenticating server
+          headers: ['app-id','secretId'],
+          formAttributes: ['grant_type', 'username', 'password']
+        },
+        authenticationResponseFormat: { //data format returned by the server
+          expires_in: 'expires_in',
+          refresh_token: 'refresh_token',
+          access_token: 'access_token'
+        }
       };
-
       App = Ember.Application.create({});
 
       App.Router.reopen({
-        rootURL: '/examples/3-token-refresh.html'
+        rootURL: '/examples/1-simple.html'
       });
 
       App.Router.map(function() {
@@ -122,6 +120,11 @@
         actions: {
           authenticate: function() {
             var credentials = this.getProperties('identification', 'password');
+            Ember.merge(credentials, {
+              'grant_type': 'password',
+              'username': this.get('identification'),
+              'password': this.get('password')
+            });
             this.get('session').authenticate('simple-auth-authenticator:oauth2-password-grant', credentials);
           }
         }
@@ -129,6 +132,9 @@
 
       // make this route protected
       App.ProtectedRoute = Ember.Route.extend(SimpleAuth.AuthenticatedRouteMixin);
+
+      // make the login route only accessible when the session is not authenticated
+      App.LoginRoute = Ember.Route.extend(SimpleAuth.UnauthenticatedRouteMixin);
     </script>
   </body>
 </html>

@@ -94,7 +94,16 @@
       window.ENV = window.ENV || {};
       window.ENV['simple-auth-oauth2'] = {
         serverTokenEndpoint: '/v2/token',
-        serverTokenRevocationEndpoint: '/revoke'
+        serverTokenRevocationEndpoint: '/revoke',
+        authenticationInputFormat: { //data format expected by the authenticating server
+          headers: ['app-id','secretId'],
+          formAttributes: ['grant_type', 'username', 'password']
+        },
+        authenticationResponseFormat: { //data format returned by the server
+          expires_in: 'expires_in',
+          refresh_token: 'refresh_token',
+          access_token: 'access_token'
+        }
       };
 
       App = Ember.Application.create({});
@@ -122,6 +131,11 @@
         actions: {
           authenticate: function() {
             var credentials = this.getProperties('identification', 'password');
+            Ember.merge(credentials, {
+              'grant_type': 'password',
+              'username': this.get('identification'),
+              'password': this.get('password')
+            });
             this.get('session').authenticate('simple-auth-authenticator:oauth2-password-grant', credentials);
           }
         }

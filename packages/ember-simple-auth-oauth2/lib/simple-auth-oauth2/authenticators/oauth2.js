@@ -176,14 +176,50 @@ export default Base.extend({
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var data = { grant_type: 'password', username: options.identification, password: options.password };
 
-      //==========
-      var inputFormatFunction = _this.authenticationInputFormat;
-      // instead of this, use a parsing function
-      console.log("inputFormatFunction", inputFormatFunction, typeof inputFormatFunction);
-      if (!!inputFormatFunction && typeof inputFormatFunction === "function") {
-        data = inputFormatFunction(options);
-      }
-      //==========
+
+            //==========
+            var inputFormatFunction = _this.authenticationInputFormat;
+            // instead of this, use a parsing function
+            console.log("inputFormatFunction", inputFormatFunction, Ember.typeOf(inputFormatFunction), options);
+            if (!Ember.isEmpty(inputFormatFunction) && Ember.typeOf(inputFormatFunction) === "object") {
+              var formAttributes = inputFormatFunction.formAttributes;
+
+              console.log("formAttributes", formAttributes, !Ember.isEmpty(formAttributes), Ember.typeOf(formAttributes));
+
+              if (!Ember.isEmpty(formAttributes) && Ember.typeOf(formAttributes) === "array") {
+                data = {}; //ignore any attribute that has been set before
+                formAttributes.forEach(function(attribute) {
+                  console.log("formAttributes", attribute);
+                  if (!Ember.isEmpty(options[attribute])) {
+                    data[attribute] = options[attribute];
+
+                  }
+                });
+              }
+
+            var headers = inputFormatFunction.headers;
+
+            console.log("headers", headers, !Ember.isEmpty(headers), Ember.typeOf(headers));
+
+            if (!Ember.isEmpty(headers) && Ember.typeOf(headers) === "array") {
+              var headerData = {};
+              headers.forEach(function(attribute) {
+                console.log("headers", attribute);
+                if (!Ember.isEmpty(options[attribute])) {
+                  headerData[attribute] = options[attribute];
+                }
+              });
+
+
+              Ember.$.ajaxSetup({
+                headers: headerData
+              });
+            }
+}
+//==========
+
+
+
 
       //scope attribute is optional according to https://tools.ietf.org/html/rfc6749#section-4.1.1
       if (!Ember.isEmpty(options.scope)) {
@@ -195,13 +231,34 @@ export default Base.extend({
       _this.makeRequest(_this.serverTokenEndpoint, data).then(function(resolveData) {
         Ember.run(function() {
 
-          //================
-          var response = resolveData;
-          // instead of this, use a parsing function
-          var outputFormatFunction = _this.authenticationResponseFormat;
-          if (!!outputFormatFunction && typeof outputFormatFunction === "function") {
-            response = outputFormatFunction(resolveData);
-          } //================
+                //================
+                var response = resolveData;
+                // instead of this, use a parsing function
+                var outputFormatFunction = _this.authenticationResponseFormat;
+                if (!Ember.isEmpty(outputFormatFunction) && Ember.typeOf(outputFormatFunction) === "object") {
+
+                  Object.keys(outputFormatFunction).forEach(function(key) {
+
+                    if (Ember.isEmpty(outputFormatFunction[key])) {
+                      return;
+                    }
+
+                    var attrBreak = outputFormatFunction[key].split(".");
+                    var server_value = null;
+                    attrBreak.forEach(function(attr, index) {
+                      if (index <= 0) {
+                        server_value = resolveData[attr];
+
+                      } else {
+                        server_value = server_value[attr];
+                      }
+
+                    });
+
+                    response[key] = server_value;
+                  });
+
+                } //================
 
           var expiresAt = _this.absolutizeExpirationTime(response.expires_in);
           _this.scheduleAccessTokenRefresh(response.expires_in, expiresAt, response.refresh_token);
