@@ -135,14 +135,26 @@ export default Ember.ObjectProxy.extend(Ember.Evented, {
     @property content
     @private
   */
-  content: { secure: {} },
+  content: null,
+
+  /**
+    Initializes the content object so references aren't shared across
+    instances.
+
+    @method initializeContent
+    @private
+  */
+  initializeContent: Ember.on('init', function() {
+    this.set('content', { secure: {} });
+  }),
 
   /**
     Authenticates the session with an `authenticator` and appropriate
     `options`. __This delegates the actual authentication work to the
     `authenticator`__ and handles the returned promise accordingly (see
     [`Authenticators.Base#authenticate`](#SimpleAuth-Authenticators-Base-authenticate)).
-    All data the authenticator resolves with will be saved in the session.
+    All data the authenticator resolves with will be saved in the session's
+    `secure` property.
 
     __This method returns a promise itself. A resolving promise indicates that
     the session was successfully authenticated__ while a rejecting promise
@@ -219,6 +231,7 @@ export default Ember.ObjectProxy.extend(Ember.Evented, {
       if (!!authenticator) {
         delete restoredContent.secure.authenticator;
         _this.container.lookup(authenticator).restore(restoredContent.secure).then(function(content) {
+          _this.set('content', restoredContent);
           _this.setup(authenticator, content);
           resolve();
         }, function() {

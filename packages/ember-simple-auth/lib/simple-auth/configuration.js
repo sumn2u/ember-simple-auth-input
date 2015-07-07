@@ -82,7 +82,7 @@ export default {
     see
     [Ember's API docs](http://emberjs.com/api/classes/Ember.Application.html#method_register);
     when the application does not interact with a server that requires
-    authorized requests, no auzthorizer is needed.
+    authorized requests, no authorizer is needed.
 
     @property authorizer
     @readOnly
@@ -120,7 +120,7 @@ export default {
   /**
     The key the store stores the data in.
 
-    @property key
+    @property localStorageKey
     @type String
     @default 'ember_simple_auth:session'
   */

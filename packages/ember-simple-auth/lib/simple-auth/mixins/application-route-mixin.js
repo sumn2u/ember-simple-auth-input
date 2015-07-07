@@ -1,7 +1,5 @@
 import Configuration from './../configuration';
 
-var routeEntryComplete = false;
-
 /**
   The mixin for the application route; defines actions that are triggered
   when authentication is required, when the session has successfully been
@@ -43,7 +41,12 @@ export default Ember.Mixin.create({
     @private
   */
   activate: function () {
-    routeEntryComplete = true;
+    /*
+      Used to detect the first time the application route is entered so that
+      the transition can be used as the target of send before entering the
+      application route and the route can be used once it has been entered.
+    */
+    this.set('_authRouteEntryComplete', true);
     this._super();
   },
 
@@ -65,7 +68,7 @@ export default Ember.Mixin.create({
       ]).forEach(function(event) {
         _this.get(Configuration.sessionPropertyName).on(event, function(error) {
           Array.prototype.unshift.call(arguments, event);
-          var target = routeEntryComplete ? _this : transition;
+          var target = _this.get('_authRouteEntryComplete') ? _this : transition;
           target.send.apply(target, arguments);
         });
       });
@@ -78,7 +81,7 @@ export default Ember.Mixin.create({
       [`Configuration.authenticationRoute`](#SimpleAuth-Configuration-authenticationRoute).
       It is triggered automatically by the
       [`AuthenticatedRouteMixin`](#SimpleAuth-AuthenticatedRouteMixin) whenever
-      a route that requries authentication is accessed but the session is not
+      a route that requires authentication is accessed but the session is not
       currently authenticated.
 
       __For an application that works without an authentication route (e.g.
