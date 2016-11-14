@@ -180,16 +180,16 @@ export default Base.extend({
             //==========
             var inputFormatObject = _this.authenticationInputFormat;
             // instead of this, use a parsing function
-            console.log("inputFormatObject", inputFormatObject, Ember.typeOf(inputFormatObject), options);
+            // console.log("inputFormatObject", inputFormatObject, Ember.typeOf(inputFormatObject), options);
             if (!Ember.isEmpty(inputFormatObject) && Ember.typeOf(inputFormatObject) === "object") {
               var formAttributes = inputFormatObject.formAttributes;
 
-              console.log("formAttributes", formAttributes, !Ember.isEmpty(formAttributes), Ember.typeOf(formAttributes));
+              // console.log("formAttributes", formAttributes, !Ember.isEmpty(formAttributes), Ember.typeOf(formAttributes));
 
               if (!Ember.isEmpty(formAttributes) && Ember.typeOf(formAttributes) === "array") {
                 data = {}; //ignore any attribute that has been set before
                 formAttributes.forEach(function(attribute) {
-                  console.log("formAttributes", attribute);
+                  // console.log("formAttributes", attribute);
                   if (!Ember.isEmpty(options[attribute])) {
                     data[attribute] = options[attribute];
 
@@ -199,12 +199,12 @@ export default Base.extend({
 
             var headers = inputFormatObject.headers;
 
-            console.log("headers", headers, !Ember.isEmpty(headers), Ember.typeOf(headers));
+            // console.log("headers", headers, !Ember.isEmpty(headers), Ember.typeOf(headers));
 
             if (!Ember.isEmpty(headers) && Ember.typeOf(headers) === "array") {
               var headerData = {};
               headers.forEach(function(attribute) {
-                console.log("headers", attribute);
+                // console.log("headers", attribute);
                 if (!Ember.isEmpty(options[attribute])) {
                   headerData[attribute] = options[attribute];
                 }

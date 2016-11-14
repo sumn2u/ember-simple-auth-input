@@ -1,0 +1,17 @@
+{
+  "name": "ember-simple-auth-input-v2",
+  "description": "simple auth extended",
+  "main": "",
+  "authors": [
+    "Marco Otte-Witte",
+    "Mars",
+    "Suman Kunwar"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "suman",
+    "kunwar"
+  ],
+  "homepage": "https://github.com/sumn2u/ember-simple-auth-input",
+  "moduleType": []
+}
